@@ -1,74 +1,64 @@
 class Player {
   constructor() {
     this.health = 20;
-    this.direction = "forward";
-    this.mustHealNowAndGoBackward = false;
   }
 
   playTurn(warrior) {
-    const takesDamages = warrior.health() < this.health;
-    this.mustHealNowAndGoBackward = warrior.health() <= 10;
+    const receivedDamages = this.hasDamages(warrior);
     this.health = warrior.health();
 
-    if (this.hasEnemy(warrior, this.direction)) {
-      warrior.think("Has unit forward");
-      warrior.attack();
-      return;
-    } else if (takesDamages) {
-      warrior.think("Takes damages");
-
-      if (this.mustHealNowAndGoBackward) {
-        warrior.walk(this.reverseDirection());
-        return;
-      }
-
-      warrior.walk();
-      return;
-    }
-
-    if (this.canRescue(warrior, this.direction)) {
-      warrior.rescue(this.direction);
-      this.direction = "forward";
-      return;
-    }
-
-    if (this.mustBeHeal(warrior)) {
-      warrior.think("I'm healing.");
-      warrior.rest();
-      return;
-    }
-
-    if (warrior.feel().isWall()) {
+    if (this.isWall(warrior)) {
       warrior.pivot();
       return;
     }
 
-    warrior.think("I'm walking.");
-    warrior.walk(this.direction);
+    if (this.isEnemy(warrior)) {
+      warrior.attack();
+      return;
+    } else if (receivedDamages && warrior.health() < 8) {
+      this.a = true;
+      // Not an enemy but I receive some damages... :(
+      warrior.walk("backward");
+      return;
+    }
+
+    // Criticity !!
+    if (this.a && warrior.health() < warrior.maxHealth()) {
+      warrior.rest();
+      return;
+    } else if (warrior.health() === warrior.maxHealth()) {
+      this.a = false;
+    }
+
+    if (warrior.health() <= 15) {
+      warrior.rest();
+      return;
+    }
+
+    warrior.walk();
   }
 
-  hasEnemy(warrior, direction = "forward") {
+  isStairs(warrior, direction = "forward") {
+    const feel = warrior.feel(direction);
+    return feel && feel.isStairs();
+  }
+
+  isUnit(warrior, direction = "forward") {
+    const feel = warrior.feel(direction);
+    return feel && feel.isUnit();
+  }
+
+  isWall(warrior, direction = "forward") {
+    const feel = warrior.feel(direction);
+    return feel && feel.isWall();
+  }
+
+  isEnemy(warrior, direction = "forward") {
     const unit = warrior.feel(direction).getUnit();
     return unit && unit.isEnemy();
   }
 
-  canRescue(warrior, direction = "forward") {
-    const unit = warrior.feel(direction).getUnit();
-    return unit && unit.isBound() && !unit.isEnemy();
-  }
-
-  mustBeHeal(warrior) {
-    return warrior.health() < warrior.maxHealth();
-  }
-
-  reverseDirection() {
-    switch (this.direction) {
-      case "forward":
-        return "backward";
-      case "backward":
-        return "forward";
-      default:
-        return "forward";
-    }
+  hasDamages(warrior) {
+    return warrior.health() < this.health;
   }
 }

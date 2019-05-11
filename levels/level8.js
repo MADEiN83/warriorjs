@@ -1,3 +1,12 @@
+/*
+CONGRATULATIONS! You've climbed to the top of the tower.
+
+Warrior Score	74
+Time Bonus	15
+Clear Bonus	18
+Total Score	107
+*/
+
 const PLACE_TYPES = {
   EMPTY: "empty",
   ENEMY: "enemy",
